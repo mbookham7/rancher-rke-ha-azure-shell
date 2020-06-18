@@ -161,7 +161,7 @@ az vm create \
 
 az vm create \
   --resource-group mb-Rancher-RKE-ResourceGroup \
-  --name rkeNode2 \
+  --name rkeNode3 \
   --image UbuntuLTS \
   --nics nic3 \
   --admin-username ubuntu \
@@ -314,6 +314,13 @@ Finally, we can install Rancher using our `helm install` command.
 ```
 helm install rancher rancher-latest/rancher \
   --namespace cattle-system \
-  --set hostname=rancher.<AzurePublicIPHere>.xip.io
+  --set hostname=rancher.mikebookham.co.uk \
+  --set ingress.tls.source=letsEncrypt \
+  --set letsEncrypt.email=mike.bookham@rancher.com
 ```
+Check install...
+```
+kubectl -n cattle-system rollout status deploy/rancher
+```
+
 ### YeeHaa!!!
