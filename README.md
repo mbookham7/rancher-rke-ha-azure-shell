@@ -6,24 +6,24 @@
 In Azure, all resouces need to belong to a resource group so we'll create this first. We're also going to set the default Region and Resource Group just to ensure that all of our resouses are created in the correct place.
 
 ```
-az group create -l northeurope  -n Rancher-RKE-ResourceGroup
-az configure --defaults location=northeurope group=Rancher-RKE-ResourceGroup
+az group create -l northeurope  -n mb-Rancher-RKE-ResourceGroup
+az configure --defaults location=northeurope group=mb-Rancher-RKE-ResourceGroup
 ```
 ### Vnet, Public IPs and Network Security Group
 Once these commands have completed, the networking elements are created inside the Resource Group. These include a vNet with a default subnet, two public IPs for the two Virtual Machines (VMs) that we will create later and a Network Secrity Group (NSG).
 
 ```
-az network vnet create --resource-group Rancher-RKE-ResourceGroup --name RancherRKEVnet --subnet-name RancherRKESubnet
+az network vnet create --resource-group mb-Rancher-RKE-ResourceGroup --name RancherRKEVnet --subnet-name RancherRKESubnet
 
-az network public-ip create --resource-group Rancher-RKE-ResourceGroup --name RancherRKEPublicIP1 --sku standard
+az network public-ip create --resource-group mb-Rancher-RKE-ResourceGroup --name RancherRKEPublicIP1 --sku standard
 
-az network public-ip create --resource-group Rancher-RKE-ResourceGroup --name RancherRKEPublicIP2 --sku standard
+az network public-ip create --resource-group mb-Rancher-RKE-ResourceGroup --name RancherRKEPublicIP2 --sku standard
 
-az network public-ip create --resource-group Rancher-RKE-ResourceGroup --name RancherRKEPublicIP3 --sku standard
+az network public-ip create --resource-group mb-Rancher-RKE-ResourceGroup --name RancherRKEPublicIP3 --sku standard
 
-az network nsg create --resource-group Rancher-RKE-ResourceGroup --name RancherRKENSG1
+az network nsg create --resource-group mb-Rancher-RKE-ResourceGroup --name RancherRKENSG1
 
-az network nsg rule create -g Rancher-RKE-ResourceGroup --nsg-name RancherRKENSG1 -n NsgRuleSSH --priority 100 \
+az network nsg rule create -g mb-Rancher-RKE-ResourceGroup --nsg-name RancherRKENSG1 -n NsgRuleSSH --priority 100 \
     --source-address-prefixes '*' --source-port-ranges '*' \
     --destination-address-prefixes '*' --destination-port-ranges 22 --access Allow \
     --protocol Tcp --description "Allow SSH Access to all VMS."
@@ -34,13 +34,13 @@ az network nsg rule create -g Rancher-RKE-ResourceGroup --nsg-name RancherRKENSG
 
 First, create a Public IP for the Load Balancer.
 ```
-az network public-ip create --resource-group Rancher-RKE-ResourceGroup --name RancherLBPublicIP --sku standard
+az network public-ip create --resource-group mb-Rancher-RKE-ResourceGroup --name RancherLBPublicIP --sku standard
 ```
 
 Next, create the Load Balancer with a health probe.
 ```
 az network lb create \
-    --resource-group Rancher-RKE-ResourceGroup \
+    --resource-group mb-Rancher-RKE-ResourceGroup \
     --name RKELoadBalancer \
     --sku standard \
     --public-ip-address RancherLBPublicIP \
@@ -48,7 +48,7 @@ az network lb create \
     --backend-pool-name myBackEndPool
 
 az network lb probe create \
-    --resource-group Rancher-RKE-ResourceGroup \
+    --resource-group mb-Rancher-RKE-ResourceGroup \
     --lb-name RKELoadBalancer \
     --name myHealthProbe \
     --protocol tcp \
@@ -58,7 +58,7 @@ Once the Load Balancer is created the NSG is updated. The ports added are **80 a
 
 ```
 az network nsg rule create \
-    --resource-group Rancher-RKE-ResourceGroup \
+    --resource-group mb-Rancher-RKE-ResourceGroup \
     --nsg-name RancherRKENSG1 \
     --name myNetworkSecurityGroupRuleHTTP \
     --protocol tcp \
@@ -75,7 +75,7 @@ Now add the Load Balancer configuration in the form of three rules. You need a r
 
 ```
 az network lb rule create \
-    --resource-group Rancher-RKE-ResourceGroup \
+    --resource-group mb-Rancher-RKE-ResourceGroup \
     --lb-name RKELoadBalancer \
     --name myHTTPRule \
     --protocol tcp \
@@ -86,7 +86,7 @@ az network lb rule create \
     --probe-name myHealthProbe
 
 az network lb rule create \
-    --resource-group Rancher-RKE-ResourceGroup \
+    --resource-group mb-Rancher-RKE-ResourceGroup \
     --lb-name RKELoadBalancer \
     --name myHTTPSRule \
     --protocol tcp \
@@ -97,7 +97,7 @@ az network lb rule create \
     --probe-name myHealthProbe
 
 az network lb rule create \
-    --resource-group Rancher-RKE-ResourceGroup \
+    --resource-group mb-Rancher-RKE-ResourceGroup \
     --lb-name RKELoadBalancer \
     --name myHTTPS6443Rule \
     --protocol tcp \
@@ -116,11 +116,11 @@ Next, we'll create the THREE VMs and install DOCKER on ALL of them.
 
 With all of the network elements created, we can create the Network Interface Cards (NIC) for the VMs.
 ```
-az network nic create --resource-group Rancher-RKE-ResourceGroup --name nic1 --vnet-name RancherRKEVnet --subnet RancherRKESubnet --network-security-group RancherRKENSG1 --public-ip-address RancherRKEPublicIP1 --lb-name RKELoadBalancer --lb-address-pools myBackEndPool
+az network nic create --resource-group mb-Rancher-RKE-ResourceGroup --name nic1 --vnet-name RancherRKEVnet --subnet RancherRKESubnet --network-security-group RancherRKENSG1 --public-ip-address RancherRKEPublicIP1 --lb-name RKELoadBalancer --lb-address-pools myBackEndPool
 
-az network nic create --resource-group Rancher-RKE-ResourceGroup --name nic2 --vnet-name RancherRKEVnet --subnet RancherRKESubnet --network-security-group RancherRKENSG1 --public-ip-address RancherRKEPublicIP2 --lb-name RKELoadBalancer --lb-address-pools myBackEndPool
+az network nic create --resource-group mb-Rancher-RKE-ResourceGroup --name nic2 --vnet-name RancherRKEVnet --subnet RancherRKESubnet --network-security-group RancherRKENSG1 --public-ip-address RancherRKEPublicIP2 --lb-name RKELoadBalancer --lb-address-pools myBackEndPool
 
-az network nic create --resource-group Rancher-RKE-ResourceGroup --name nic3 --vnet-name RancherRKEVnet --subnet RancherRKESubnet --network-security-group RancherRKENSG1 --public-ip-address RancherRKEPublicIP3 --lb-name RKELoadBalancer --lb-address-pools myBackEndPool
+az network nic create --resource-group mb-Rancher-RKE-ResourceGroup --name nic3 --vnet-name RancherRKEVnet --subnet RancherRKESubnet --network-security-group RancherRKENSG1 --public-ip-address RancherRKEPublicIP3 --lb-name RKELoadBalancer --lb-address-pools myBackEndPool
 ```
 ### Create the Virtual Machines
 
@@ -141,7 +141,7 @@ EOF
 Deploy the virtual machines.
 ```
 az vm create \
-  --resource-group Rancher-RKE-ResourceGroup \
+  --resource-group mb-Rancher-RKE-ResourceGroup \
   --name rkeNode1 \
   --image UbuntuLTS \
   --nics nic1 \
@@ -151,7 +151,7 @@ az vm create \
 
 
 az vm create \
-  --resource-group Rancher-RKE-ResourceGroup \
+  --resource-group mb-Rancher-RKE-ResourceGroup \
   --name rkeNode2 \
   --image UbuntuLTS \
   --nics nic2 \
@@ -160,7 +160,7 @@ az vm create \
   --custom-data cloud-init.txt
 
 az vm create \
-  --resource-group Rancher-RKE-ResourceGroup \
+  --resource-group mb-Rancher-RKE-ResourceGroup \
   --name rkeNode2 \
   --image UbuntuLTS \
   --nics nic3 \
